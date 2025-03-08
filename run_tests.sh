@@ -32,7 +32,6 @@ find tests -mindepth 1 -maxdepth 1 -type d -print0 | while IFS= read -r -d $'\0'
       echo "Python program crashed for test $test_name:"
       echo "$output"
       test_result="CRASHED"
-	    exit 1
     else
       diff -Bw <(cat "$output_file") <(echo "$output") > diff.txt
       if [ -s diff.txt ]; then
@@ -40,8 +39,6 @@ find tests -mindepth 1 -maxdepth 1 -type d -print0 | while IFS= read -r -d $'\0'
         echo "Diff:"
         cat diff.txt
         test_result="FAIL"
-        rm diff.txt  # Clean up (only if it exists)
-        exit 1
       else
         test_result="PASS"
       fi
@@ -49,12 +46,18 @@ find tests -mindepth 1 -maxdepth 1 -type d -print0 | while IFS= read -r -d $'\0'
     fi
   fi
 
-    echo "Test $test_name: $test_result"
-    echo "------------------------------------"
+  echo "Test $test_name: $test_result"
+  echo "------------------------------------"
 
   # Store the result in an associative array (more efficient for counting)
   results[$test_name]="$test_result"
+done
 
+# Exit with an error code if any test failed
+for result in "${results[@]}"; do
+  if [ "$result" != "PASS" ]; then
+    exit 1
+  fi
 done
 
 exit 0
